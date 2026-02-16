@@ -1,0 +1,38 @@
+const express = require("express");
+const puppeteer = require("puppeteer");
+
+const app = express();
+
+app.get("/", async (req, res) => {
+  const isin = req.query.isin;
+  if (!isin) return res.send("ERRORE");
+
+  try {
+    const browser = await puppeteer.launch({
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      headless: "new"
+    });
+
+    const page = await browser.newPage();
+
+    await page.goto(
+      "https://live.euronext.com/en/product/structured-products/" + isin,
+      { waitUntil: "networkidle2", timeout: 60000 }
+    );
+
+    const content = await page.content();
+
+    await browser.close();
+
+    if (content.toLowerCase().includes("no longer active")) {
+      return res.send("SCADUTO");
+    }
+
+    return res.send("ATTIVO");
+
+  } catch (e) {
+    return res.send("ERRORE");
+  }
+});
+
+app.listen(3000, () => console.log("Server avviato"));
