@@ -1,5 +1,6 @@
-const express = require("express");
-const puppeteer = require("puppeteer");
+ const express = require("express");
+const puppeteer = require("puppeteer-core");
+const chromium = require("@sparticuz/chromium");
 
 const app = express();
 
@@ -9,8 +10,9 @@ app.get("/", async (req, res) => {
 
   try {
     const browser = await puppeteer.launch({
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-      headless: "new"
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+      headless: true,
     });
 
     const page = await browser.newPage();
@@ -21,7 +23,6 @@ app.get("/", async (req, res) => {
     );
 
     const content = await page.content();
-
     await browser.close();
 
     if (content.toLowerCase().includes("no longer active")) {
@@ -35,6 +36,5 @@ app.get("/", async (req, res) => {
   }
 });
 
- const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("Server avviato sulla porta " + PORT));
-
